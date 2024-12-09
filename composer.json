@@ -25,8 +25,9 @@
   ],
   "require": {
     "laravel/framework": "^11.0",
-    "illuminate/support": "^11.34",
-    "php-open-source-saver/jwt-auth": "^2.7"
+    "php-open-source-saver/jwt-auth": "^2.7",
+    "php": "^8.2",
+    "illuminate/support": "^11.34"
   },
   "autoload": {
     "psr-4": {
