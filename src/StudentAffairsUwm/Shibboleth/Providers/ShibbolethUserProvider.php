@@ -102,4 +102,14 @@ class ShibbolethUserProvider implements UserProviderInterface
     {
         // Not Implemented
     }
+    /**
+     * @param Authenticatable $user
+     * @param array $credentials
+     * @param bool $force
+     * @return void
+     */
+    public function rehashPasswordIfRequired(Authenticatable $user, #[\SensitiveParameter] array $credentials, bool $force = false)
+    {
+
+    }
 }
