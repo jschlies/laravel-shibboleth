@@ -51,5 +51,5 @@
   "require-dev": {
     "phpunit/phpunit": "^11.5",
     "orchestra/testbench": "*"
-  }
+  },"version": "1.0.0"
 }
