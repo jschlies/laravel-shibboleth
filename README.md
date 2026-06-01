@@ -13,7 +13,7 @@ into explaining how to set that up.
 
 Use [composer][1] to require the latest release into your project:
 
-    composer require dpazuic/laravel-shibboleth
+    composer require uicosss/laravel-shibboleth
 
 If you're running Laravel >= 5.5, then you can skip this step, otherwise
 you will need to manually register the service provider in your `config/app.php`
@@ -23,7 +23,7 @@ file within the `Providers` array.
 StudentSystemServices\Shibboleth\ShibbolethServiceProvider::class,
 ```
 
-If you you would like to use the emulated IdP via shibalike, then you will need
+If you would like to use the emulated IdP via shibalike, then you will need
 to manually register it on any version - this is not automatically loaded even
 in Laravel 5.5.
 
