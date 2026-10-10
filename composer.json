@@ -2,6 +2,7 @@
     "name": "mrfabulous/laravel-shibboleth",
     "description": "Enable basic Shibboleth support for Laravel. Forked from razorbacks/laravel-shibboleth.",
     "type": "library",
+
     "authors": [
         {
             "name": "Christopher Maio",
