@@ -1,6 +1,6 @@
 {
-    "name": "uicosss/laravel-shibboleth",
-    "description": "Enable basic Shibboleth support for Laravel 5.x. Forked from razorbacks/laravel-shibboleth.",
+    "name": "mrfabulous/laravel-shibboleth",
+    "description": "Enable basic Shibboleth support for Laravel. Forked from razorbacks/laravel-shibboleth.",
     "type": "library",
     "authors": [
         {
