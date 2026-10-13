@@ -40,7 +40,7 @@ class ShibbolethController extends Controller
     /**
      * Constructor
      */
-    public function __construct (GenericUser $user = NULL)
+    public function __construct (?GenericUser $user = NULL)
     {
         $this->user = $user;
     }
@@ -82,42 +82,39 @@ class ShibbolethController extends Controller
             throw new \Exception('No auth.providers.users.model found.');
         }
 
-        // Attempt to login with the email, if success, update the user model
+        // Attempt to log in with the email, if success, update the user model
         // with data from the Shibboleth headers (if present)
         if (
             filter_var($map['email'], FILTER_VALIDATE_EMAIL) &&
             Auth::attempt(['email' => $map['email']], TRUE))
         {
-            $User = $user_class::where('email', '=', $map['email'])->first();
+            $user = $user_class::where('email', '=', $map['email'])->first();
 
             // Update the model as necessary
-            $User->update($map);
+            $user->update($map);
         }
+        // NO EMAIL??? Try UCSF ID
         elseif (
+            preg_match("/^02[0-9]{7}$/", $map['ucsf_employee_id_num']) &&
             Auth::attempt(['ucsf_employee_id_num' => $map['ucsf_employee_id_num']], TRUE))
         {
             $User = $user_class::where('ucsf_employee_id_num', '=', $map['ucsf_employee_id_num'])->first();
-
-            // Update the model as necessary
-            $User->update($map);
         }
         // Add user and send through auth.
         elseif (config('shibboleth.add_new_users', TRUE))
         {
             if ($Employee = EmployeeRepository::getOrCreateEmployee($map['ucsf_employee_id_num'], TRUE))
             {
-                Auth::login($Employee->User);
-            }
-            else
-            {
-                return abort(403, 'Unauthorized');
+                $User = $Employee->User;
             }
         }
 
-        else
+        if(! $User)
         {
             return abort(403, 'Unauthorized');
         }
+
+        Auth::login($User);
 
         Session::regenerate();
 
@@ -132,7 +129,7 @@ class ShibbolethController extends Controller
         }
 
 //        if (config('jwtauth') === true) {
-//            $route .= $this->tokenizeRedirect($User, ['auth_type' => 'idp']);
+//            $route .= $this->tokenizeRedirect($user, ['auth_type' => 'idp']);
 //        }
 
         return redirect()->intended($route);
