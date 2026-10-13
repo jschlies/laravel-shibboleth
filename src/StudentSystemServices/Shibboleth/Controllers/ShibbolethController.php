@@ -77,7 +77,7 @@ class ShibbolethController extends Controller
             return abort(403, 'Unauthorized');
         }
 
-        if ( ! $userClass = config('auth.providers.users.model', 'App\User'))
+        if ( ! $user_class = config('auth.providers.users.model', 'App\User'))
         {
             throw new \Exception('No auth.providers.users.model found.');
         }
@@ -88,18 +88,18 @@ class ShibbolethController extends Controller
             filter_var($map['email'], FILTER_VALIDATE_EMAIL) &&
             Auth::attempt(['email' => $map['email']], TRUE))
         {
-            $user = $userClass::where('email', '=', $map['email'])->first();
+            $User = $user_class::where('email', '=', $map['email'])->first();
 
             // Update the model as necessary
-            $user->update($map);
+            $User->update($map);
         }
         elseif (
             Auth::attempt(['ucsf_employee_id_num' => $map['ucsf_employee_id_num']], TRUE))
         {
-            $user = $userClass::where('ucsf_employee_id_num', '=', $map['ucsf_employee_id_num'])->first();
+            $User = $user_class::where('ucsf_employee_id_num', '=', $map['ucsf_employee_id_num'])->first();
 
             // Update the model as necessary
-            $user->update($map);
+            $User->update($map);
         }
         // Add user and send through auth.
         elseif (config('shibboleth.add_new_users', TRUE))
@@ -132,7 +132,7 @@ class ShibbolethController extends Controller
         }
 
 //        if (config('jwtauth') === true) {
-//            $route .= $this->tokenizeRedirect($user, ['auth_type' => 'idp']);
+//            $route .= $this->tokenizeRedirect($User, ['auth_type' => 'idp']);
 //        }
 
         return redirect()->intended($route);
