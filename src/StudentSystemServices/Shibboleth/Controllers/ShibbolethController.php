@@ -72,7 +72,7 @@ class ShibbolethController extends Controller
             $map[$local] = $this->getServerVariable($server);
         }
 
-        if (empty($map['email'] && empty($map['ucsf_employee_id_num'])))
+        if (empty($map['email']) && empty($map['ucsf_employee_id_num']))
         {
             return abort(403, 'Unauthorized');
         }
