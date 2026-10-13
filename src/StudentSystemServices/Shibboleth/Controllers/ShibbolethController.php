@@ -12,8 +12,10 @@ use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\View;
 use Illuminate\Console\AppNamespaceDetectorTrait;
+
 //use JWTAuth;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use UCSF\DOM\Repositories\Common\EmployeeRepository;
 
 class ShibbolethController extends Controller
 {
@@ -38,7 +40,7 @@ class ShibbolethController extends Controller
     /**
      * Constructor
      */
-    public function __construct(GenericUser $user = null)
+    public function __construct (GenericUser $user = NULL)
     {
         $this->user = $user;
     }
@@ -47,7 +49,7 @@ class ShibbolethController extends Controller
      * Create the session, send the user away to the IDP
      * for authentication.
      */
-    public function login()
+    public function login ()
     {
         return Redirect::to('https://' . Request::server('SERVER_NAME')
             . ':' . Request::server('SERVER_PORT') . config('shibboleth.idp_login')
@@ -58,39 +60,62 @@ class ShibbolethController extends Controller
      * Setup authentication based on returned server variables
      * from the IdP.
      */
-    public function idpAuthenticate()
+    public function idpAuthenticate ()
     {
-        if (empty(config('shibboleth.user'))) {
+        if (empty(config('shibboleth.user')))
+        {
             throw new \Exception('No user attribute mapping for server variables.');
         }
 
-        foreach (config('shibboleth.user') as $local => $server) {
+        foreach (config('shibboleth.user') as $local => $server)
+        {
             $map[$local] = $this->getServerVariable($server);
         }
 
-        if (empty($map['email'])) {
+        if (empty($map['email'] && empty($map['ucsf_employee_id_num'])))
+        {
             return abort(403, 'Unauthorized');
         }
 
-        $userClass = config('auth.providers.users.model', 'App\User');
+        if ( ! $userClass = config('auth.providers.users.model', 'App\User'))
+        {
+            throw new \Exception('No auth.providers.users.model found.');
+        }
 
         // Attempt to login with the email, if success, update the user model
         // with data from the Shibboleth headers (if present)
-        if (Auth::attempt(array('email' => $map['email']), true)) {
+        if (
+            filter_var($map['email'], FILTER_VALIDATE_EMAIL) &&
+            Auth::attempt(['email' => $map['email']], TRUE))
+        {
             $user = $userClass::where('email', '=', $map['email'])->first();
 
             // Update the model as necessary
             $user->update($map);
         }
+        elseif (
+            Auth::attempt(['ucsf_employee_id_num' => $map['ucsf_employee_id_num']], TRUE))
+        {
+            $user = $userClass::where('ucsf_employee_id_num', '=', $map['ucsf_employee_id_num'])->first();
 
+            // Update the model as necessary
+            $user->update($map);
+        }
         // Add user and send through auth.
-        elseif (config('shibboleth.add_new_users', true)) {
-            $map['password'] = 'shibboleth';
-            $user = $userClass::create($map);
-            Auth::login($user);
+        elseif (config('shibboleth.add_new_users', TRUE))
+        {
+            if ($Employee = EmployeeRepository::getOrCreateEmployee($map['ucsf_employee_id_num'], TRUE))
+            {
+                Auth::login($Employee->User);
+            }
+            else
+            {
+                return abort(403, 'Unauthorized');
+            }
         }
 
-        else {
+        else
+        {
             return abort(403, 'Unauthorized');
         }
 
@@ -100,10 +125,10 @@ class ShibbolethController extends Controller
         $route = empty(session('shibboleth_redirect_to')) ? config('shibboleth.authenticated') : session('shibboleth_redirect_to');
 
         // Unset the shibboleth_redirect_to if it was set
-        if(!empty(session('shibboleth_redirect_to'))){
+        if ( ! empty(session('shibboleth_redirect_to')))
+        {
 
             session()->remove('shibboleth_redirect_to');
-
         }
 
 //        if (config('jwtauth') === true) {
@@ -116,7 +141,7 @@ class ShibbolethController extends Controller
     /**
      * Destroy the current session and log the user out, redirect them to the main route.
      */
-    public function destroy()
+    public function destroy ()
     {
         Auth::logout();
         Session::flush();
@@ -132,18 +157,19 @@ class ShibbolethController extends Controller
     /**
      * Wrapper function for getting server variables.
      */
-    private function getServerVariable($variableName)
+    private function getServerVariable ($variableName)
     {
 
         $variable = Request::server($variableName);
 
-        if (strtolower($variableName) === 'itrustsuppress') {
+        if (strtolower($variableName) === 'itrustsuppress')
+        {
             $variable = empty($variable) ? Request::server('REDIRECT_' . $variableName) : $variable;
 
             return strtolower($variable) === 'true';
         }
 
-        return (!empty($variable)) ?
+        return ( ! empty($variable)) ?
             $variable :
             Request::server('REDIRECT_' . $variableName);
     }
@@ -152,7 +178,7 @@ class ShibbolethController extends Controller
      * Simple function that allows configuration variables
      * to be either names of views, or redirect routes.
      */
-    private function viewOrRedirect($view)
+    private function viewOrRedirect ($view)
     {
         return (View::exists($view)) ? view($view) : Redirect::to($view);
     }
@@ -160,8 +186,8 @@ class ShibbolethController extends Controller
     /**
      * Uses JWTAuth to tokenize the user and returns a URL query string.
      *
-     * @param  App\User $user
-     * @param  array $customClaims
+     * @param App\User $user
+     * @param array $customClaims
      * @return string
      */
 //    private function tokenizeRedirect($user, $customClaims)
