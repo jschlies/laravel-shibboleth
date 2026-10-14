@@ -88,10 +88,10 @@ class ShibbolethController extends Controller
             filter_var($map['email'], FILTER_VALIDATE_EMAIL) &&
             Auth::attempt(['email' => $map['email']], TRUE))
         {
-            $user = $user_class::where('email', '=', $map['email'])->first();
+            $User = $user_class::where('email', '=', $map['email'])->first();
 
             // Update the model as necessary
-            $user->update($map);
+            $User->update($map);
         }
         // NO EMAIL??? Try UCSF ID
         elseif (
